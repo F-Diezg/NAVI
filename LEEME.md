@@ -113,6 +113,10 @@ Sustituye `assets/icon/navi.png` (1024×1024, con fondo) y `assets/icon/navi_for
 dart run flutter_launcher_icons
 ```
 
+## Clasificar asignaturas
+
+En **Asignaturas**, el menú ⋮ de cada una (o dentro de ella, arriba a la derecha) permite ponerla en **Primer cuatrimestre**, **Segundo cuatrimestre** o **Relleno**. Las de relleno quedan plegadas al final y sus tareas no salen en el calendario, en Exámenes ni en los avisos.
+
 ## Cómo decide qué es examen
 
 Canvas no tiene un tipo “examen”, así que NAVI lo deduce:

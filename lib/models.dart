@@ -100,9 +100,11 @@ class NaviItem {
         doneAt: _parseDate(r['done_at']),
         hidden: (r['hidden'] as bool?) ?? false,
         syncId: r['sync_id'] as String?,
+        category: categoryFromString(r['category'] as String?),
       );
 
-  Map<String, dynamic> toRow() => {
+  /// Lo que viene de Canvas (sin tu clasificación, para no pisarla).
+  Map<String, dynamic> toCanvasRow() => {
         'id': id,
         'source': source,
         'title': title,
@@ -123,6 +125,16 @@ class NaviItem {
       };
 }
 
+/// Cómo has clasificado una asignatura.
+enum CourseCategory { q1, q2, filler }
+
+CourseCategory? categoryFromString(String? s) => switch (s) {
+      'q1' => CourseCategory.q1,
+      'q2' => CourseCategory.q2,
+      'filler' => CourseCategory.filler,
+      _ => null,
+    };
+
 class Course {
   Course({
     required this.id,
@@ -131,6 +143,7 @@ class Course {
     this.attendancePct,
     this.attendanceLabel,
     this.syncId,
+    this.category,
   });
 
   final int id;
@@ -139,6 +152,9 @@ class Course {
   final double? attendancePct;
   final String? attendanceLabel;
   final String? syncId;
+  CourseCategory? category;
+
+  bool get isFiller => category == CourseCategory.filler;
 
   factory Course.fromRow(Map<String, dynamic> r) => Course(
         id: (r['id'] as num).toInt(),
@@ -157,6 +173,9 @@ class Course {
         'attendance_label': attendanceLabel,
         'sync_id': syncId,
       };
+
+  /// Para la caché local (incluye tu clasificación).
+  Map<String, dynamic> toRow() => {...toCanvasRow(), 'category': category?.name};
 }
 
 class NaviSettings {

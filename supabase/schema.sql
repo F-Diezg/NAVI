@@ -28,6 +28,10 @@ create table if not exists public.navi_courses (
   primary key (user_id, id)
 );
 
+-- Clasificación de asignaturas (añadido después; seguro de ejecutar otra vez)
+alter table public.navi_courses
+  add column if not exists category text check (category in ('q1', 'q2', 'filler'));
+
 -- Tareas, exámenes y eventos (de Canvas o añadidos a mano)
 create table if not exists public.navi_items (
   user_id        uuid not null default auth.uid() references auth.users on delete cascade,

@@ -32,10 +32,18 @@ class AppState extends ChangeNotifier {
   // ------------------------------------------------------------ consultas
 
   /// Lo que se ve: manuales + lo que vino en la última sincronización de Canvas.
-  List<NaviItem> get items {
+  /// Las asignaturas de "relleno" no aparecen en el calendario, en Exámenes
+  /// ni en los avisos (salvo con "Mostrar elementos ocultos").
+  List<NaviItem> get items => _visible(includeFiller: showHidden);
+
+  List<NaviItem> _visible({required bool includeFiller}) {
     final last = settings?.lastSyncId;
+    final filler = includeFiller
+        ? const <int>{}
+        : {for (final c in courses) if (c.isFiller) c.id};
     return _items.where((i) {
       if (i.hidden && !showHidden) return false;
+      if (i.courseId != null && filler.contains(i.courseId)) return false;
       if (i.isManual) return true;
       return last == null || i.syncId == last;
     }).toList();
@@ -57,8 +65,15 @@ class AppState extends ChangeNotifier {
 
   List<NaviItem> get exams => items.where((i) => i.isExam).toList()..sort(_byDue);
 
+  /// Dentro de una asignatura se ven sus cosas aunque sea de relleno.
   List<NaviItem> itemsForCourse(int? courseId) =>
-      items.where((i) => i.courseId == courseId).toList()..sort(_byDue);
+      _visible(includeFiller: true)
+          .where((i) => i.courseId == courseId)
+          .toList()
+        ..sort(_byDue);
+
+  List<Course> coursesIn(CourseCategory? category) =>
+      courses.where((c) => c.category == category).toList();
 
   List<NaviItem> upcoming({int days = 7}) {
     final now = DateTime.now();
@@ -236,6 +251,22 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     await _persist(item, {'kind_override': item.kindOverride?.name},
         undo: () => item.kindOverride = before);
+  }
+
+  Future<void> setCourseCategory(Course course, CourseCategory? category) async {
+    final before = course.category;
+    course.category = category;
+    notifyListeners();
+    try {
+      await repo.setCourseCategory(course.id, category);
+      await _saveCache();
+      unawaited(notifier.refresh(items, settings));
+    } catch (e) {
+      course.category = before;
+      error = 'No se pudo guardar la clasificación. ¿Has ejecutado el SQL '
+          'de la columna "category" en Supabase?';
+      notifyListeners();
+    }
   }
 
   Future<void> setHidden(NaviItem item, bool hidden) async {

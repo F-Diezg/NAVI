@@ -70,7 +70,7 @@ class Repo {
   Future<void> upsertCanvas(List<Course> courses, List<NaviItem> items) async {
     final id = uid;
     final courseRows = [
-      for (final c in courses) {...c.toRow(), 'user_id': id}
+      for (final c in courses) {...c.toCanvasRow(), 'user_id': id}
     ];
     if (courseRows.isNotEmpty) {
       await _db
@@ -104,6 +104,14 @@ class Repo {
           .from('navi_items')
           .upsert(chunk, onConflict: 'user_id,id', defaultToNull: false);
     }
+  }
+
+  Future<void> setCourseCategory(int courseId, CourseCategory? category) async {
+    await _db
+        .from('navi_courses')
+        .update({'category': category?.name})
+        .eq('user_id', uid)
+        .eq('id', courseId);
   }
 
   Future<void> updateItem(String itemId, Map<String, dynamic> fields) async {

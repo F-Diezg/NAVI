@@ -19,24 +19,91 @@ class CoursesScreen extends StatelessWidget {
           icon: Icons.menu_book_rounded);
     }
 
+    Widget card(Course c) => _CourseCard(
+        key: ValueKey(c.id),
+        title: c.name,
+        course: c,
+        items: state.itemsForCourse(c.id));
+
+    final q1 = state.coursesIn(CourseCategory.q1);
+    final q2 = state.coursesIn(CourseCategory.q2);
+    final unsorted = state.coursesIn(null);
+    final filler = state.coursesIn(CourseCategory.filler);
+
     return ListView(
       padding: const EdgeInsets.only(top: 8, bottom: 96),
       children: [
-        for (final c in courses)
-          _CourseCard(
-            title: c.name,
-            course: c,
-            items: state.itemsForCourse(c.id),
-          ),
-        if (noCourse.isNotEmpty)
+        if (unsorted.isNotEmpty) ...[
+          SectionHeader('Sin clasificar (${unsorted.length})'),
+          if (q1.isEmpty && q2.isEmpty && filler.isEmpty)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text('Usa ⋮ en cada asignatura para ponerla en primer '
+                  'cuatrimestre, segundo cuatrimestre o relleno.'),
+            ),
+          for (final c in unsorted) card(c),
+        ],
+        if (q1.isNotEmpty) ...[
+          SectionHeader('Primer cuatrimestre (${q1.length})'),
+          for (final c in q1) card(c),
+        ],
+        if (q2.isNotEmpty) ...[
+          SectionHeader('Segundo cuatrimestre (${q2.length})'),
+          for (final c in q2) card(c),
+        ],
+        if (noCourse.isNotEmpty) ...[
+          SectionHeader('Otros'),
           _CourseCard(title: 'Sin asignatura', items: noCourse),
+        ],
+        if (filler.isNotEmpty)
+          ExpansionTile(
+            title: Text('Relleno (${filler.length})'),
+            subtitle: const Text(
+                'No salen en el calendario, en Exámenes ni en los avisos'),
+            children: [for (final c in filler) card(c)],
+          ),
+      ],
+    );
+  }
+}
+
+/// Menú ⋮ para clasificar una asignatura.
+class CategoryMenu extends StatelessWidget {
+  const CategoryMenu({super.key, required this.course});
+  final Course course;
+
+  static const _labels = {
+    CourseCategory.q1: 'Primer cuatrimestre',
+    CourseCategory.q2: 'Segundo cuatrimestre',
+    CourseCategory.filler: 'Relleno',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    return PopupMenuButton<String>(
+      tooltip: 'Clasificar',
+      onSelected: (v) => state.setCourseCategory(
+          course, v == 'none' ? null : categoryFromString(v)),
+      itemBuilder: (_) => [
+        for (final e in _labels.entries)
+          CheckedPopupMenuItem(
+            value: e.key.name,
+            checked: course.category == e.key,
+            child: Text(e.value),
+          ),
+        if (course.category != null) ...[
+          const PopupMenuDivider(),
+          const PopupMenuItem(value: 'none', child: Text('Quitar clasificación')),
+        ],
       ],
     );
   }
 }
 
 class _CourseCard extends StatelessWidget {
-  const _CourseCard({required this.title, required this.items, this.course});
+  const _CourseCard(
+      {super.key, required this.title, required this.items, this.course});
   final String title;
   final Course? course;
   final List<NaviItem> items;
@@ -75,6 +142,7 @@ class _CourseCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis),
                 ),
                 if (pct != null) _AttendanceChip(pct: pct),
+                if (course != null) CategoryMenu(course: course!),
               ]),
               if (course?.code != null && course?.code != title)
                 Text(course?.code ?? '',
@@ -171,7 +239,10 @@ class CourseDetailScreen extends StatelessWidget {
     final undated = items.where((i) => i.dueAt == null).toList();
 
     return Scaffold(
-      appBar: AppBar(title: Text(title, overflow: TextOverflow.ellipsis)),
+      appBar: AppBar(
+        title: Text(title, overflow: TextOverflow.ellipsis),
+        actions: [if (course != null) CategoryMenu(course: course)],
+      ),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 40),
         children: [
