@@ -132,14 +132,25 @@ Las tareas que no te interesen se pueden **ocultar** (⋮ → Ocultar). Para ver
 - **Con Canvas**: al abrir la app si han pasado más de 2 horas, y siempre que pulses ⟳.
 - **Entre dispositivos**: al volver a la app y cada 15 minutos. Si marcas algo en el móvil, el PC lo verá al volver a él.
 
-## Opción B: que GitHub compile por ti
+## Opción B: que GitHub compile por ti (la que usamos)
 
-1. Crea un repositorio **privado** en GitHub y sube esta carpeta (sin `config.json`).
-2. En el repo, ve a **Settings → Secrets and variables → Actions** y crea dos secretos: `SUPABASE_URL` y `SUPABASE_KEY`.
-3. Ve a **Actions → Compilar NAVI → Run workflow**.
-4. Al terminar (unos 10 min), descarga los artefactos **NAVI-android** (APK) y **NAVI-windows**.
+Cada vez que se sube un cambio a `main`, GitHub compila NAVI y lo publica en la página de descargas del repo:
+**<https://github.com/F-Diezg/NAVI/releases/latest>**
 
-Cada compilación en GitHub firma el APK con una clave distinta, así que para actualizar tendrás que desinstalar e instalar. No pierdes nada, porque los datos están en la nube.
+Necesita dos secretos en el repo (**Settings → Secrets and variables → Actions**): `SUPABASE_URL` y `SUPABASE_KEY`. Sin ellos la compilación se para con un aviso.
+
+**Instalar en el Samsung A54**
+1. Abre ese enlace en Chrome desde el móvil y toca **NAVI.apk**.
+2. Cuando Chrome avise de que el archivo puede ser dañino, toca **Descargar de todos modos**.
+3. Abre el archivo descargado. La primera vez Android pedirá permiso: **Ajustes → Permitir de esta fuente** (para Chrome) y vuelve atrás.
+4. Toca **Instalar**. Si Play Protect avisa de "app no reconocida", toca **Más detalles → Instalar de todos modos**.
+
+**Instalar en Windows**
+1. Descarga **NAVI-windows.zip** y descomprímelo en una carpeta fija (por ejemplo `C:\Programas\NAVI`).
+2. Abre `navi.exe`. Si sale "Windows protegió su PC", pulsa **Más información → Ejecutar de todas formas**.
+3. Clic derecho en `navi.exe` → **Anclar a Inicio** o crea un acceso directo.
+
+**Actualizar**: repite lo mismo. Como cada compilación de GitHub firma el APK con una clave distinta, en Android puede que tengas que desinstalar la versión anterior antes de instalar la nueva. Tus datos no se pierden: están en la nube.
 
 ## Problemas frecuentes
 

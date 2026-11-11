@@ -279,7 +279,7 @@ class SectionHeader extends StatelessWidget {
               style: t.textTheme.labelMedium?.copyWith(
                   letterSpacing: 1.2, color: t.colorScheme.primary)),
         ),
-        if (trailing != null) trailing!,
+        ?trailing,
       ]),
     );
   }

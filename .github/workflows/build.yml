@@ -8,11 +8,24 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   android:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Comprobar claves de Supabase
+        shell: bash
+        env:
+          SB_URL: ${{ secrets.SUPABASE_URL }}
+          SB_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          if [ -z "$SB_URL" ] || [ -z "$SB_KEY" ]; then
+            echo "::error::Faltan los secretos SUPABASE_URL y/o SUPABASE_KEY (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -43,6 +56,16 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Comprobar claves de Supabase
+        shell: bash
+        env:
+          SB_URL: ${{ secrets.SUPABASE_URL }}
+          SB_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          if [ -z "$SB_URL" ] || [ -z "$SB_KEY" ]; then
+            echo "::error::Faltan los secretos SUPABASE_URL y/o SUPABASE_KEY (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -57,7 +80,37 @@ jobs:
           printf '{"SUPABASE_URL":"%s","SUPABASE_KEY":"%s"}' "${{ secrets.SUPABASE_URL }}" "${{ secrets.SUPABASE_KEY }}" > config.json
       - name: Compilar Windows
         run: flutter build windows --release --dart-define-from-file=config.json
+      - name: Empaquetar Windows
+        shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath NAVI-windows.zip
       - uses: actions/upload-artifact@v4
         with:
           name: NAVI-windows
-          path: build/windows/x64/runner/Release/
+          path: NAVI-windows.zip
+
+  # Publica las dos versiones en la página de descargas del repo (Releases),
+  # para poder bajar el APK directamente desde el móvil.
+  publicar:
+    needs: [android, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+      - name: Preparar archivos
+        run: |
+          mv out/NAVI-android/app-release.apk NAVI.apk
+          mv out/NAVI-windows/NAVI-windows.zip NAVI-windows.zip
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ultima
+          name: NAVI (última versión)
+          body: |
+            **Android (A54):** toca `NAVI.apk` para descargarlo e instalarlo.
+            **Windows:** descarga `NAVI-windows.zip`, descomprímelo y abre `navi.exe`.
+
+            Compilado desde ${{ github.sha }}.
+          make_latest: true
+          files: |
+            NAVI.apk
+            NAVI-windows.zip

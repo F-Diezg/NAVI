@@ -52,7 +52,7 @@ int _manifest() {
         </receiver>
 ''';
     final i = s.lastIndexOf('</application>');
-    s = s.substring(0, i) + receivers + '    ' + s.substring(i);
+    s = '${s.substring(0, i)}$receivers    ${s.substring(i)}';
   }
 
   if (s == before) return 0;
