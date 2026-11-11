@@ -100,11 +100,9 @@ class NaviItem {
         doneAt: _parseDate(r['done_at']),
         hidden: (r['hidden'] as bool?) ?? false,
         syncId: r['sync_id'] as String?,
-        category: categoryFromString(r['category'] as String?),
       );
 
-  /// Lo que viene de Canvas (sin tu clasificación, para no pisarla).
-  Map<String, dynamic> toCanvasRow() => {
+  Map<String, dynamic> toRow() => {
         'id': id,
         'source': source,
         'title': title,
@@ -163,9 +161,11 @@ class Course {
         attendancePct: (r['attendance_pct'] as num?)?.toDouble(),
         attendanceLabel: r['attendance_label'] as String?,
         syncId: r['sync_id'] as String?,
+        category: categoryFromString(r['category'] as String?),
       );
 
-  Map<String, dynamic> toRow() => {
+  /// Lo que viene de Canvas (sin tu clasificación, para no pisarla).
+  Map<String, dynamic> toCanvasRow() => {
         'id': id,
         'name': name,
         'code': code,
