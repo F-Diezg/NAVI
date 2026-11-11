@@ -2,7 +2,13 @@
 ///   flutter run --dart-define-from-file=config.json
 /// (copia config.example.json a config.json y rellénalo).
 class Config {
-  static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  static const _rawUrl = String.fromEnvironment('SUPABASE_URL');
+
+  /// Admite la URL con o sin "/rest/v1/" al final.
+  static String get supabaseUrl => _rawUrl
+      .trim()
+      .replaceFirst(RegExp(r'/rest/v1/?$'), '')
+      .replaceFirst(RegExp(r'/+$'), '');
   static const supabaseKey = String.fromEnvironment('SUPABASE_KEY');
 
   static bool get isConfigured =>
